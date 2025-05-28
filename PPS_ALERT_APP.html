@@ -385,10 +385,16 @@
 
     if (deductible || oop) {
       let text = '';
-      if (deductible) text += `${deductible} deductible`;
-      if (oop) text += deductible ? ` / ${oop} OOP` : `${oop} OOP`;
-      if (combined) text += ' (combine)';
-      if (separate) text += ' (separate)';
+      if (combined) {
+        // For combined, treat as single deductible/OOP amount
+        if (deductible) text += `${formatCurrency(deductible)} deductible/OOP`;
+        else if (oop) text += `${formatCurrency(oop)} deductible/OOP`;
+      } else {
+        // For separate or no selection, show individual amounts
+        if (deductible) text += `${formatCurrency(deductible)} deductible`;
+        if (oop) text += deductible ? ` / ${formatCurrency(oop)} OOP` : `${formatCurrency(oop)} OOP`;
+        if (separate) text += ' (separate)';
+      }
       text += ' used';
       if (asOf) text += ` as of ${asOf}`;
       outputParts.push(text);

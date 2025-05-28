@@ -140,6 +140,91 @@
       opacity: 1;
       transform: translateY(0);
     }
+
+    .help-button {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .help-button:hover {
+      background-color: #5ba82a;
+      transform: scale(1.1);
+    }
+
+    .help-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 1002;
+    }
+
+    .help-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      max-width: 600px;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .help-content h3 {
+      color: var(--primary-color);
+      margin-top: 0;
+      margin-bottom: 20px;
+    }
+
+    .help-content h4 {
+      color: var(--primary-color);
+      margin-bottom: 10px;
+      margin-top: 20px;
+    }
+
+    .help-content ul {
+      margin-bottom: 15px;
+    }
+
+    .help-content li {
+      margin-bottom: 5px;
+    }
+
+    .close-help {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #999;
+    }
+
+    .close-help:hover {
+      color: #333;
+    }
   </style>
 </head>
 <body onload="document.getElementById('assessment')?.focus();">
@@ -263,6 +348,54 @@
   <div id="copiedMessage">Copied to clipboard!</div>
   <div id="output"></div>
   </main>
+
+  <!-- Help Button -->
+  <button class="help-button" onclick="toggleHelp()">?</button>
+
+  <!-- Help Modal -->
+  <div id="helpModal" class="help-modal" onclick="closeHelp(event)">
+    <div class="help-content">
+      <button class="close-help" onclick="closeHelp()">&times;</button>
+      <h3>🏥 PPS Alert - Quick Guide</h3>
+      
+      <h4>🚀 Quick Start</h4>
+      <ul>
+        <li><strong>Choose rates:</strong> Click CT, NY, NJ, or Self-Pay buttons</li>
+        <li><strong>Fill patient info:</strong> Enter deductible/OOP, coinsurance, etc.</li>
+        <li><strong>Generate:</strong> Click "Generate Output" or press Enter</li>
+        <li><strong>Copy:</strong> Click "Copy Output" to paste into records</li>
+      </ul>
+
+      <h4>💰 Key Features</h4>
+      <ul>
+        <li><strong>Service Rates:</strong> Auto-fill with rate buttons, check "In Network" if applicable</li>
+        <li><strong>Deductible/OOP:</strong> Enter "used out of total" amounts, choose Combined/Separate</li>
+        <li><strong>Post-Deductible:</strong> Enter % and apply (rounds up for out-of-network)</li>
+        <li><strong>PIF:</strong> Paid In Full hides service rates, shows admin info only</li>
+      </ul>
+
+      <h4>📝 Sample Outputs</h4>
+      <p><strong>Standard:</strong><br>
+      <code>In Network: Assessment $118.19 | IOP $298.00 | $2,000/$6,000 deductible used | Telemed: Yes</code></p>
+      
+      <p><strong>PIF:</strong><br>
+      <code>In Network: 2025 PIF | $2,000/$6,000 deductible used | Ins Renews 1/2026</code></p>
+
+      <h4>💡 Tips</h4>
+      <ul>
+        <li>Press <strong>Enter</strong> anywhere to generate output</li>
+        <li>Click <strong>"Clear All"</strong> to reset the form</li>
+        <li>Output automatically formats with $ signs and commas</li>
+      </ul>
+
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+      <p style="text-align: center; margin-bottom: 0;">
+        <a href="https://github.com/phoenixglass/index" target="_blank" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">
+          📖 View Full Documentation
+        </a>
+      </p>
+    </div>
+  </div>
 
 <script>
   const rateSets = {
@@ -391,8 +524,8 @@
     const combined = document.getElementById('combined').checked;
     const separate = document.getElementById('separate').checked;
 
-    // Show deductible/OOP info regardless of PIF status
-    if (deductibleUsed || deductibleTotal || oopUsed || oopTotal) {
+    // Only show deductible/OOP info if NOT PIF
+    if (!isPIFActive && (deductibleUsed || deductibleTotal || oopUsed || oopTotal)) {
       let text = '';
       const parts = [];
       
@@ -447,6 +580,18 @@
     navigator.clipboard.writeText(outputText).then(() => {
       showMessage('copiedMessage', 'Copied to clipboard!');
     });
+  }
+
+  function toggleHelp() {
+    const modal = document.getElementById('helpModal');
+    modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function closeHelp(event) {
+    const modal = document.getElementById('helpModal');
+    // Close if clicking outside the content or on the close button
+    if (event && event.target !== modal && !event.target.closest('.help-content')) return;
+    modal.style.display = 'none';
   }
 
   function handleDeductibleOOPClick(clickedBox, otherBox) {

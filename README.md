@@ -3,7 +3,7 @@
 A simple web tool to quickly generate formatted insurance summaries for patient records.
 
 ## 🌐 Access the Tool
-**Live URL:** [[https://phoenixglass.github.io/PPS-Alert/](https://phoenixglass.github.io/PPS-Alert/)](https://phoenixglass.github.io/index/)
+**Live URL:** https://phoenixglass.github.io/index/
 
 ## 📋 How to Use
 

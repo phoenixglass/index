@@ -356,21 +356,30 @@
   function generateOutput() {
     const outputParts = [];
 
-    const services = {
-      assessment: 'Assessment',
-      iop: 'IOP',
-      group: 'Group',
-      it: 'IT',
-      ft: 'FT',
-      eval: 'Psych Eval',
-      followup: 'Psych f/u',
-      mat: 'MAT'
-    };
+    // Add PIF first if active
+    if (isPIFActive) {
+      const pifYear = document.getElementById('pifYear').value;
+      outputParts.push(`${pifYear} PIF`);
+    }
 
-    Object.entries(services).forEach(([id, name]) => {
-      const value = document.getElementById(id).value;
-      if (value) outputParts.push(`${name} ${formatCurrency(value)}`);
-    });
+    // Only show service rates if NOT PIF
+    if (!isPIFActive) {
+      const services = {
+        assessment: 'Assessment',
+        iop: 'IOP',
+        group: 'Group',
+        it: 'IT',
+        ft: 'FT',
+        eval: 'Psych Eval',
+        followup: 'Psych f/u',
+        mat: 'MAT'
+      };
+
+      Object.entries(services).forEach(([id, name]) => {
+        const value = document.getElementById(id).value;
+        if (value) outputParts.push(`${name} ${formatCurrency(value)}`);
+      });
+    }
 
     const deductibleUsed = document.getElementById('deductibleUsed').value;
     const deductibleTotal = document.getElementById('deductibleTotal').value;
@@ -413,11 +422,6 @@
 
     if (coinsurance) outputParts.push(`${coinsurance}% coinsurance`);
     if (renews) outputParts.push(`Ins Renews ${renews}`);
-
-    if (isPIFActive) {
-      const pifYear = document.getElementById('pifYear').value;
-      outputParts.push(`${pifYear} PIF`);
-    }
 
     document.getElementsByName('telemed').forEach(option => {
       if (option.checked) outputParts.push(`Telemed: ${option.value}`);

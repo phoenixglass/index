@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPS Alert</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <style>
+    :root {
+      --primary-color: #52877b;
+      --accent-color: #69be28;
+      --background: #f4f4f4;
+      --text: #333;
+      --header-bg: #ffffff;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: var(--background);
+      color: var(--text);
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--header-bg);
+      padding: 10px 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    main {
+      padding: 20px;
+    }
+
+    h2 {
+      color: var(--primary-color);
+      margin-top: 0;
+    }
+
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    input[type="checkbox"],
+    input[type="radio"] {
+      margin-right: 5px;
+    }
+
+    select {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-left: 10px;
+    }
+
+    .checkbox-inline {
+      display: flex;
+      align-items: center;
+      margin-bottom: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .pif-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      margin-top: 10px;
+      margin-right: 10px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background-color: #06263d;
+      transform: scale(1.05);
+    }
+
+    .rate-button {
+      background-color: var(--primary-color);
+      color: #fff;
+    }
+
+    .active-button {
+      border: 2px solid var(--accent-color);
+      background-color: #e6f4ea;
+      transform: scale(1.05);
+    }
+
+    #output {
+      margin-top: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 5px solid var(--accent-color);
+      opacity: 0;
+      cursor: pointer;
+      transition: opacity 0.4s ease;
+    }
+
+    #output.visible {
+      opacity: 1;
+    }
+
+    #copiedMessage,
+    #rateMessage {
+      color: var(--accent-color);
+      margin-top: 10px;
+      opacity: 0;
+      transform: translateY(-5px);
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    #copiedMessage.visible,
+    #rateMessage.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body onload="document.getElementById('assessment')?.focus();">
+  <header>
+    <h2>PPS Alert: Insurance Summary Generator</h2>
+    <div class="checkbox-inline">
+      <input type="checkbox" id="inNetwork" />
+      <label for="inNetwork">In Network:</label>
+      <button class="rate-button" data-rate="CT" onclick="applyRates('CT')">CT Rates</button>
+      <button class="rate-button" data-rate="NY" onclick="applyRates('NY')">NY Rates</button>
+      <button class="rate-button" data-rate="NJ" onclick="applyRates('NJ')">NJ Rates</button>
+      <button class="rate-button" data-rate="SelfPay" onclick="applyRates('SelfPay')">Self-Pay Rates</button>
+      <button onclick="resetRates()">Clear All</button>
+    </div>
+    <div id="rateMessage"></div>
+  </header>
+
+  <main>
+  <div class="input-group">
+    <label for="postDeductiblePercent">Post-Deductible (%):</label>
+    <input id="postDeductiblePercent" type="text" placeholder="e.g. 40" style="width:60px; margin-left:10px;" />
+    <button onclick="applyPostDeductible()">Post-Deductible</button>
+  </div>
+
+  <div class="input-group">
+    <label for="assessment">Assessment</label>
+    <input type="text" id="assessment" />
+  </div>
+  <div class="input-group">
+    <label for="iop">IOP</label>
+    <input type="text" id="iop" />
+  </div>
+  <div class="input-group">
+    <label for="group">Group</label>
+    <input type="text" id="group" />
+  </div>
+  <div class="input-group">
+    <label for="it">IT</label>
+    <input type="text" id="it" />
+  </div>
+  <div class="input-group">
+    <label for="ft">FT</label>
+    <input type="text" id="ft" />
+  </div>
+  <div class="input-group">
+    <label for="eval">Psych Eval</label>
+    <input type="text" id="eval" />
+  </div>
+  <div class="input-group">
+    <label for="followup">Psych f/u</label>
+    <input type="text" id="followup" />
+  </div>
+  <div class="input-group">
+    <label for="mat">MAT</label>
+    <input type="text" id="mat" />
+  </div>
+
+  <div class="input-group">
+    <label for="deductible">Deductible</label>
+    <input type="text" id="deductible" placeholder="e.g., $1000/$2000" />
+  </div>
+  <div class="input-group">
+    <label for="oop">OOP</label>
+    <input type="text" id="oop" placeholder="e.g., $3000/$4000" />
+  </div>
+  <div class="input-group">
+    <label for="asOf">As of (for Deductible & OOP)</label>
+    <input type="text" id="asOf" placeholder="e.g., 4/2" />
+  </div>
+  <div class="input-group">
+    <label for="coinsurance">Coinsurance (%)</label>
+    <input type="text" id="coinsurance" />
+  </div>
+  <div class="input-group">
+    <label for="renews">Ins Renews</label>
+    <input type="text" id="renews" placeholder="e.g., 1/2026" />
+  </div>
+
+  <div class="input-group">
+    <label>PIF</label>
+    <div class="pif-group">
+      <button onclick="togglePIF()">PIF</button>
+      <select id="pifYear">
+        <option value="2024">2024</option>
+        <option value="2025" selected>2025</option>
+        <option value="2026">2026</option>
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label>Telemed</label>
+    <div class="checkbox-inline">
+      <input type="radio" name="telemed" id="telemedYes" value="Y" />
+      <label for="telemedYes">Yes</label>
+      <input type="radio" name="telemed" id="telemedNo" value="N" />
+      <label for="telemedNo">No</label>
+      <input type="radio" name="telemed" id="telemedSelfPay" value="Self-Pay" />
+      <label for="telemedSelfPay">Self-Pay</label>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label>Deductible / OOP Status</label>
+    <div class="checkbox-inline">
+<input type="checkbox" id="combined" value="Combined" />
+<label for="combined">Combined</label>
+<input type="checkbox" id="separate" value="Separate" />
+<label for="separate">Separate</label>
+    </div>
+  </div>
+
+  <button onclick="generateOutput()">Generate Output</button>
+  <button onclick="copyOutput()">Copy Output</button>
+  <div id="copiedMessage">Copied to clipboard!</div>
+  <div id="output"></div>
+  </main>
+
+ <script>
+  // 🔧 GLOBAL VARIABLES
+  const rateSets = {
+    CT: { assessment: 118.19, iop: 298, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    NY: { assessment: 118.19, iop: 305, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    NJ: { assessment: 112.56, iop: 225, group: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
+    SelfPay: { assessment: 450, iop: 295, group: 175, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
+  };
+
+  const fieldIds = ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat', 'deductible', 'oop', 'asOf', 'coinsurance', 'renews'];
+
+  let rateButtons; // declare globally to use in multiple functions
+  let isPIFActive = false; // Track PIF button state
+
+  // ✅ FUNCTIONS
+
+  function showMessage(id, message) {
+    const el = document.getElementById(id);
+    el.textContent = message;
+    el.classList.remove('visible'); // Reset class
+    void el.offsetWidth; // Force reflow
+    el.classList.add('visible');
+    setTimeout(() => el.classList.remove('visible'), 2000);
+  }
+
+  function resetRates() {
+    fieldIds.forEach(id => document.getElementById(id).value = '');
+    document.getElementById('inNetwork').checked = false;
+    document.getElementsByName('telemed').forEach(el => el.checked = false);
+    document.getElementById('combined').checked = false;
+    document.getElementById('separate').checked = false;
+    rateButtons.forEach(button => button.classList.remove('active-button'));
+    isPIFActive = false;
+    updatePIFButton();
+    document.getElementById('output').textContent = '';
+    document.getElementById('output').classList.remove('visible');
+    showMessage('rateMessage', '✅ Form Cleared!');
+  }
+
+  function applyRates(rateType) {
+    const rates = rateSets[rateType];
+    if (!rates) return;
+    Object.keys(rates).forEach(field => {
+      document.getElementById(field).value = rates[field].toFixed(2);
+    });
+    if (rateType === 'SelfPay') document.getElementById('telemedSelfPay').checked = true;
+    showMessage('rateMessage', `✅ ${rateType} Rates Applied!`);
+  }
+
+  function applyPostDeductible() {
+    const percent = parseFloat(document.getElementById('postDeductiblePercent').value);
+    if (isNaN(percent) || percent <= 0) {
+      alert('Please enter a valid percentage.');
+      return;
+    }
+    const factor = percent / 100;
+    ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat'].forEach(id => {
+      const input = document.getElementById(id);
+      if (input.value) {
+        const base = parseFloat(input.value.replace(/,/g, ''));
+        if (!isNaN(base)) {
+          let result = base * factor;
+          // Round up to nearest whole dollar for out of network rates only
+          if (!document.getElementById('inNetwork').checked) {
+            result = Math.ceil(result);
+          }
+          input.value = result.toFixed(2);
+        }
+      }
+    });
+    showMessage('rateMessage', '✅ Post-Deductible Applied!');
+  }
+
+  function togglePIF() {
+    isPIFActive = !isPIFActive;
+    updatePIFButton();
+  }
+
+  function updatePIFButton() {
+    const pifButton = document.querySelector('.pif-group button');
+    if (isPIFActive) {
+      pifButton.classList.add('active-button');
+    } else {
+      pifButton.classList.remove('active-button');
+    }
+  }
+
+  function formatCurrency(value) {
+    if (!value) return '';
+    const raw = value.replace(/,/g, '');
+    const num = parseFloat(raw);
+    if (isNaN(num)) return value;
+    const options = { minimumFractionDigits: Number.isInteger(num) ? 0 : 2, maximumFractionDigits: 2 };
+    return `$${num.toLocaleString('en-US', options)}`;
+  }
+
+  function generateOutput() {
+    const outputParts = [];
+
+    const services = {
+      assessment: 'Assessment',
+      iop: 'IOP',
+      group: 'Group',
+      it: 'IT',
+      ft: 'FT',
+      eval: 'Psych Eval',
+      followup: 'Psych f/u',
+      mat: 'MAT'
+    };
+
+    Object.entries(services).forEach(([id, name]) => {
+      const value = document.getElementById(id).value;
+      if (value) outputParts.push(`${name} ${formatCurrency(value)}`);
+    });
+
+    const deductible = document.getElementById('deductible').value;
+    const oop = document.getElementById('oop').value;
+    const asOf = document.getElementById('asOf').value;
+    const coinsurance = document.getElementById('coinsurance').value;
+    const renews = document.getElementById('renews').value;
+    const combined = document.getElementById('combined').checked;
+    const separate = document.getElementById('separate').checked;
+
+    if (deductible || oop) {
+      let text = '';
+      if (deductible) text += `${deductible} deductible`;
+      if (oop) text += deductible ? ` / ${oop} OOP` : `${oop} OOP`;
+      if (combined) text += ' (combine)';
+      if (separate) text += ' (separate)';
+      text += ' used';
+      if (asOf) text += ` as of ${asOf}`;
+      outputParts.push(text);
+    }
+
+    if (coinsurance) outputParts.push(`${coinsurance}% coinsurance`);
+    if (renews) outputParts.push(`Ins Renews ${renews}`);
+
+    if (isPIFActive) {
+      const pifYear = document.getElementById('pifYear').value;
+      outputParts.push(`${pifYear} PIF`);
+    }
+
+    document.getElementsByName('telemed').forEach(option => {
+      if (option.checked) outputParts.push(`Telemed: ${option.value}`);
+    });
+
+    let outputText = outputParts.filter(Boolean).join(' | ');
+    if (document.getElementById('inNetwork').checked) {
+      outputText = `In Network: ${outputText}`;
+    }
+
+    const outputDiv = document.getElementById('output');
+    outputDiv.textContent = outputText;
+    outputDiv.classList.add('visible');
+  }
+
+  function copyOutput() {
+    const outputText = document.getElementById('output').textContent;
+    if (!outputText) return;
+    navigator.clipboard.writeText(outputText).then(() => {
+      showMessage('copiedMessage', 'Copied to clipboard!');
+    });
+  }
+
+  function handleDeductibleOOPClick(clickedBox, otherBox) {
+    clickedBox.addEventListener('change', function () {
+      if (clickedBox.checked) {
+        otherBox.checked = false;
+      }
+    });
+  }
+
+  // ✅ EVENT LISTENERS
+  document.addEventListener('DOMContentLoaded', function () {
+    rateButtons = document.querySelectorAll('.rate-button');
+
+    rateButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        applyRates(button.getAttribute('data-rate'));
+        rateButtons.forEach(btn => btn.classList.remove('active-button'));
+        button.classList.add('active-button');
+      });
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        generateOutput();
+      }
+    });
+
+    const combinedBox = document.getElementById('combined');
+    const separateBox = document.getElementById('separate');
+
+    handleDeductibleOOPClick(combinedBox, separateBox);
+    handleDeductibleOOPClick(separateBox, combinedBox);
+  });
+</script>
+</body>
+</html>

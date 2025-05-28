@@ -391,30 +391,33 @@
     const combined = document.getElementById('combined').checked;
     const separate = document.getElementById('separate').checked;
 
-    // Only show deductible/OOP info if NOT PIF
-    if (!isPIFActive && (deductibleUsed || deductibleTotal || oopUsed || oopTotal)) {
+    // Show deductible/OOP info regardless of PIF status
+    if (deductibleUsed || deductibleTotal || oopUsed || oopTotal) {
       let text = '';
-      if (combined) {
-        if (deductibleUsed && deductibleTotal) {
-          text += `${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible/OOP`;
-        } else if (oopUsed && oopTotal) {
-          text += `${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} deductible/OOP`;
-        }
-      } else {
-        const parts = [];
-        if (deductibleUsed && deductibleTotal) {
-          parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
-        }
-        if (oopUsed && oopTotal) {
+      const parts = [];
+      
+      // Always show deductible if present
+      if (deductibleUsed && deductibleTotal) {
+        parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
+      }
+      
+      // Always show OOP if present
+      if (oopUsed && oopTotal) {
+        if (combined) {
+          // For combined: show OOP total only
+          parts.push(`${formatCurrency(oopTotal)} OOP (combine)`);
+        } else {
+          // For separate: show used/total OOP
           parts.push(`${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} OOP`);
-        }
-        if (parts.length > 0) {
-          text += parts.join(' / ');
-          if (separate) text += ' (separate)';
+          if (separate) {
+            // Add (separate) label if separate is checked
+            parts[parts.length - 1] = parts[parts.length - 1].replace(' OOP', ' OOP (separate)');
+          }
         }
       }
       
-      if (text) {
+      if (parts.length > 0) {
+        text = parts.join(' / ');
         text += ' used';
         if (asOf) text += ` as of ${asOf}`;
         outputParts.push(text);

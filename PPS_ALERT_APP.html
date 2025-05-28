@@ -198,12 +198,16 @@
   </div>
 
   <div class="input-group">
-    <label for="deductible">Deductible</label>
-    <input type="text" id="deductible" placeholder="e.g., $1000/$2000" />
+    <label for="deductibleUsed">Deductible Used</label>
+    <input type="text" id="deductibleUsed" placeholder="e.g., 2000" style="width: 100px;" />
+    <span style="margin: 0 10px;">out of</span>
+    <input type="text" id="deductibleTotal" placeholder="e.g., 6000" style="width: 100px;" />
   </div>
   <div class="input-group">
-    <label for="oop">OOP</label>
-    <input type="text" id="oop" placeholder="e.g., $3000/$4000" />
+    <label for="oopUsed">OOP Used</label>
+    <input type="text" id="oopUsed" placeholder="e.g., 3000" style="width: 100px;" />
+    <span style="margin: 0 10px;">out of</span>
+    <input type="text" id="oopTotal" placeholder="e.g., 4000" style="width: 100px;" />
   </div>
   <div class="input-group">
     <label for="asOf">As of (for Deductible & OOP)</label>
@@ -260,8 +264,7 @@
   <div id="output"></div>
   </main>
 
- <script>
-  // 🔧 GLOBAL VARIABLES
+<script>
   const rateSets = {
     CT: { assessment: 118.19, iop: 298, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NY: { assessment: 118.19, iop: 305, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
@@ -269,18 +272,15 @@
     SelfPay: { assessment: 450, iop: 295, group: 175, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
   };
 
-  const fieldIds = ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat', 'deductible', 'oop', 'asOf', 'coinsurance', 'renews'];
-
-  let rateButtons; // declare globally to use in multiple functions
-  let isPIFActive = false; // Track PIF button state
-
-  // ✅ FUNCTIONS
+  const fieldIds = ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
+  let rateButtons;
+  let isPIFActive = false;
 
   function showMessage(id, message) {
     const el = document.getElementById(id);
     el.textContent = message;
-    el.classList.remove('visible'); // Reset class
-    void el.offsetWidth; // Force reflow
+    el.classList.remove('visible');
+    void el.offsetWidth;
     el.classList.add('visible');
     setTimeout(() => el.classList.remove('visible'), 2000);
   }
@@ -322,7 +322,6 @@
         const base = parseFloat(input.value.replace(/,/g, ''));
         if (!isNaN(base)) {
           let result = base * factor;
-          // Round up to nearest whole dollar for out of network rates only
           if (!document.getElementById('inNetwork').checked) {
             result = Math.ceil(result);
           }
@@ -349,11 +348,9 @@
 
   function formatCurrency(value) {
     if (!value) return '';
-    const raw = value.replace(/,/g, '');
-    const num = parseFloat(raw);
+    const num = parseFloat(value.toString().replace(/[,$]/g, ''));
     if (isNaN(num)) return value;
-    const options = { minimumFractionDigits: Number.isInteger(num) ? 0 : 2, maximumFractionDigits: 2 };
-    return `$${num.toLocaleString('en-US', options)}`;
+    return '$' + num.toLocaleString();
   }
 
   function generateOutput() {
@@ -375,29 +372,43 @@
       if (value) outputParts.push(`${name} ${formatCurrency(value)}`);
     });
 
-    const deductible = document.getElementById('deductible').value;
-    const oop = document.getElementById('oop').value;
+    const deductibleUsed = document.getElementById('deductibleUsed').value;
+    const deductibleTotal = document.getElementById('deductibleTotal').value;
+    const oopUsed = document.getElementById('oopUsed').value;
+    const oopTotal = document.getElementById('oopTotal').value;
     const asOf = document.getElementById('asOf').value;
     const coinsurance = document.getElementById('coinsurance').value;
     const renews = document.getElementById('renews').value;
     const combined = document.getElementById('combined').checked;
     const separate = document.getElementById('separate').checked;
 
-    if (deductible || oop) {
+    if (deductibleUsed || deductibleTotal || oopUsed || oopTotal) {
       let text = '';
       if (combined) {
-        // For combined, treat as single deductible/OOP amount
-        if (deductible) text += `${formatCurrency(deductible)} deductible/OOP`;
-        else if (oop) text += `${formatCurrency(oop)} deductible/OOP`;
+        if (deductibleUsed && deductibleTotal) {
+          text += `${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible/OOP`;
+        } else if (oopUsed && oopTotal) {
+          text += `${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} deductible/OOP`;
+        }
       } else {
-        // For separate or no selection, show individual amounts
-        if (deductible) text += `${formatCurrency(deductible)} deductible`;
-        if (oop) text += deductible ? ` / ${formatCurrency(oop)} OOP` : `${formatCurrency(oop)} OOP`;
-        if (separate) text += ' (separate)';
+        const parts = [];
+        if (deductibleUsed && deductibleTotal) {
+          parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
+        }
+        if (oopUsed && oopTotal) {
+          parts.push(`${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} OOP`);
+        }
+        if (parts.length > 0) {
+          text += parts.join(' / ');
+          if (separate) text += ' (separate)';
+        }
       }
-      text += ' used';
-      if (asOf) text += ` as of ${asOf}`;
-      outputParts.push(text);
+      
+      if (text) {
+        text += ' used';
+        if (asOf) text += ` as of ${asOf}`;
+        outputParts.push(text);
+      }
     }
 
     if (coinsurance) outputParts.push(`${coinsurance}% coinsurance`);
@@ -438,7 +449,6 @@
     });
   }
 
-  // ✅ EVENT LISTENERS
   document.addEventListener('DOMContentLoaded', function () {
     rateButtons = document.querySelectorAll('.rate-button');
 

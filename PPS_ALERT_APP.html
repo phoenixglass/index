@@ -391,7 +391,8 @@
     const combined = document.getElementById('combined').checked;
     const separate = document.getElementById('separate').checked;
 
-    if (deductibleUsed || deductibleTotal || oopUsed || oopTotal) {
+    // Only show deductible/OOP info if NOT PIF
+    if (!isPIFActive && (deductibleUsed || deductibleTotal || oopUsed || oopTotal)) {
       let text = '';
       if (combined) {
         if (deductibleUsed && deductibleTotal) {

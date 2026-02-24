@@ -243,6 +243,11 @@
   </header>
 
   <main>
+  <div class="input-group" id="copayGroup" style="display:none;">
+    <label for="copay">Copay (per service)</label>
+    <input type="text" id="copay" placeholder="e.g., 40" style="width: 80px;" />
+  </div>
+
   <div class="input-group">
     <label for="postDeductiblePercent">Post-Deductible (%):</label>
     <input id="postDeductiblePercent" type="text" placeholder="e.g. 40" style="width:60px; margin-left:10px;" />
@@ -455,6 +460,8 @@
   function resetRates() {
     fieldIds.forEach(id => document.getElementById(id).value = '');
     document.getElementById('inNetwork').checked = false;
+    document.getElementById('copay').value = '';
+    document.getElementById('copayGroup').style.display = 'none';
     document.getElementsByName('telemed').forEach(el => el.checked = false);
     document.getElementById('combined').checked = false;
     document.getElementById('separate').checked = false;
@@ -522,6 +529,15 @@
 
   function generateOutput() {
     const outputParts = [];
+
+    // Add copay if In Network is checked
+    const copayVal = document.getElementById('copay').value.trim();
+    if (document.getElementById('inNetwork').checked && copayVal) {
+      const copayNum = parseFloat(copayVal.replace(/[,$]/g, ''));
+      if (!isNaN(copayNum)) {
+        outputParts.push(`${formatCurrency(copayNum)} copay per service`);
+      }
+    }
 
     // Add PIF first if active
     if (isPIFActive) {
@@ -651,6 +667,17 @@
       if (event.key === 'Enter') {
         event.preventDefault();
         generateOutput();
+      }
+    });
+
+    const inNetworkCheckbox = document.getElementById('inNetwork');
+    const copayGroup = document.getElementById('copayGroup');
+    inNetworkCheckbox.addEventListener('change', function () {
+      if (this.checked) {
+        copayGroup.style.display = '';
+      } else {
+        copayGroup.style.display = 'none';
+        document.getElementById('copay').value = '';
       }
     });
 

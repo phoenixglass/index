@@ -267,6 +267,10 @@
     <input type="text" id="group" />
   </div>
   <div class="input-group">
+    <label for="specialtyGroup">Specialty Group</label>
+    <input type="text" id="specialtyGroup" />
+  </div>
+  <div class="input-group">
     <label for="it">IT</label>
     <input type="text" id="it" />
   </div>
@@ -374,7 +378,7 @@
       <ul>
         <li>Click rate buttons (CT/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
-        <li>Individual services: Assessment, IOP, Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
+        <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
       <h4>💰 Deductible & OOP</h4>
@@ -437,15 +441,16 @@
 
 <script>
   const rateSets = {
-    CT: { assessment: 118.19, iop: 298, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
-    NY: { assessment: 118.19, iop: 305, group: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
-    NJ: { assessment: 112.56, iop: 225, group: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
-    SelfPay: { assessment: 450, iop: 295, group: 175, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
+    CT: { assessment: 118.19, iop: 298, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    NY: { assessment: 118.19, iop: 305, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    NJ: { assessment: 112.56, iop: 225, group: 40, specialtyGroup: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
+    SelfPay: { assessment: 450, iop: 295, group: 175, specialtyGroup: 100, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
   };
 
-  const fieldIds = ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
+  const fieldIds = ['assessment', 'iop', 'group', 'specialtyGroup', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
   let rateButtons;
   let isPIFActive = false;
+  let currentRateType = null;
 
   function showMessage(id, message) {
     const el = document.getElementById(id);
@@ -466,6 +471,7 @@
     document.getElementById('separate').checked = false;
     rateButtons.forEach(button => button.classList.remove('active-button'));
     isPIFActive = false;
+    currentRateType = null;
     updatePIFButton();
     document.getElementById('output').textContent = '';
     document.getElementById('output').classList.remove('visible');
@@ -475,6 +481,7 @@
   function applyRates(rateType) {
     const rates = rateSets[rateType];
     if (!rates) return;
+    currentRateType = rateType;
     Object.keys(rates).forEach(field => {
       document.getElementById(field).value = rates[field].toFixed(2);
     });
@@ -489,7 +496,7 @@
       return;
     }
     const factor = percent / 100;
-    ['assessment', 'iop', 'group', 'it', 'ft', 'eval', 'followup', 'mat'].forEach(id => {
+    ['assessment', 'iop', 'group', 'specialtyGroup', 'it', 'ft', 'eval', 'followup', 'mat'].forEach(id => {
       const input = document.getElementById(id);
       if (input.value) {
         const base = parseFloat(input.value.replace(/,/g, ''));
@@ -550,6 +557,7 @@
         assessment: 'Assessment',
         iop: 'IOP',
         group: 'Group',
+        ...(currentRateType === 'SelfPay' ? { specialtyGroup: 'Sp. Group' } : {}),
         it: 'IT',
         ft: 'FT',
         eval: 'Psych Eval',

@@ -393,8 +393,8 @@
       <ul>
         <li>Enter percentage (e.g., "40") and click "Post-Deductible"</li>
         <li>Automatically calculates patient responsibility after deductible is met</li>
-        <li><strong>In-Network:</strong> Shows exact percentage with decimals</li>
-        <li><strong>Out-of-Network:</strong> Rounds UP to nearest whole dollar</li>
+        <li><strong>In-Network:</strong> Exact dollar and cent amount (no rounding)</li>
+        <li><strong>Out-of-Network:</strong> Rounds UP to nearest cent</li>
       </ul>
 
       <h4>🏥 PIF (Paid In Full)</h4>
@@ -502,8 +502,10 @@
         const base = parseFloat(input.value.replace(/,/g, ''));
         if (!isNaN(base)) {
           let result = base * factor;
-          if (!document.getElementById('inNetwork').checked) {
-            result = Math.ceil(result);
+          if (document.getElementById('inNetwork').checked) {
+            result = Math.round(result * 100) / 100;
+          } else {
+            result = Math.ceil(result * 100) / 100;
           }
           input.value = result.toFixed(2);
         }

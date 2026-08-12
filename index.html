@@ -414,7 +414,7 @@
 
       <h4>📝 Sample Outputs</h4>
       <p><strong>Standard Output:</strong><br>
-      <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: Assessment $118.19 | IOP $298.00 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes</code></p>
+      <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: Assessment $118.19 | IOP $328.00 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes</code></p>
       
       <p><strong>PIF Output:</strong><br>
       <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: 2025 PIF | Ins Renews 1/2026 | Telemed: Yes</code></p>
@@ -441,7 +441,7 @@
 
 <script>
   const rateSets = {
-    CT: { assessment: 118.19, iop: 298, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    CT: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NY: { assessment: 118.19, iop: 305, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NJ: { assessment: 112.56, iop: 225, group: 40, specialtyGroup: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
     SelfPay: { assessment: 450, iop: 295, group: 175, specialtyGroup: 100, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
@@ -626,6 +626,9 @@
     let outputText = outputParts.filter(Boolean).join(' | ');
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
+    }
+    if (document.getElementById('telemedNo').checked) {
+      outputText = `SP for Virtual | ${outputText}`;
     }
 
     const outputDiv = document.getElementById('output');

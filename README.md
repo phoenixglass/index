@@ -44,7 +44,12 @@ A simple web tool to quickly generate formatted insurance summaries for patient 
 
 **Standard Output:**
 ```
-In Network: Assessment $118.19 | IOP $298.00 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes
+In Network: Assessment $118.19 | IOP $328.00 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes
+```
+
+**Telemed "No" Output:**
+```
+SP for Virtual | In Network: Assessment $118.19 | IOP $328.00 | 40% coinsurance | Ins Renews 1/2026 | Telemed: N
 ```
 
 **PIF (Paid In Full) Output:**

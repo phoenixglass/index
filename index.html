@@ -623,12 +623,13 @@
       if (option.checked) outputParts.push(`Telemed: ${option.value}`);
     });
 
+    if (document.getElementById('telemedNo').checked) {
+      outputParts.unshift('SP for Virtual');
+    }
+
     let outputText = outputParts.filter(Boolean).join(' | ');
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
-    }
-    if (document.getElementById('telemedNo').checked) {
-      outputText = `SP for Virtual | ${outputText}`;
     }
 
     const outputDiv = document.getElementById('output');

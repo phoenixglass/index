@@ -49,7 +49,7 @@ In Network: Assessment $118.19 | IOP $328.00 | $2,000/$6,000 deductible used as 
 
 **Telemed "No" Output:**
 ```
-SP for Virtual | In Network: Assessment $118.19 | IOP $328.00 | 40% coinsurance | Ins Renews 1/2026 | Telemed: N
+In Network: SP for Virtual | Assessment $118.19 | IOP $328.00 | 40% coinsurance | Ins Renews 1/2026 | Telemed: N
 ```
 
 **PIF (Paid In Full) Output:**

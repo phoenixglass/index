@@ -382,7 +382,7 @@
       <ul>
         <li>Click rate buttons (CT/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
-        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:"</li>
+        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:" (out of network, so it cannot be combined with "In Network")</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
@@ -693,14 +693,21 @@
     });
 
     const inNetworkCheckbox = document.getElementById('inNetwork');
+    const faaCheckbox = document.getElementById('faaAfterDeductible');
     const copayGroup = document.getElementById('copayGroup');
     inNetworkCheckbox.addEventListener('change', function () {
       if (this.checked) {
+        faaCheckbox.checked = false;
         copayGroup.style.display = '';
       } else {
         copayGroup.style.display = 'none';
         document.getElementById('copay').value = '';
       }
+    });
+
+    // FAA rates are out of network, so the two can never both be checked
+    faaCheckbox.addEventListener('change', function () {
+      if (this.checked) inNetworkCheckbox.checked = false;
     });
 
     const combinedBox = document.getElementById('combined');

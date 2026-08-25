@@ -382,7 +382,7 @@
       <ul>
         <li>Click rate buttons (CT/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
-        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:"</li>
+        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:" &mdash; out of network only, so it clears "In Network"</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
@@ -634,11 +634,10 @@
     }
 
     let outputText = outputParts.filter(Boolean).join(' | ');
-    if (document.getElementById('faaAfterDeductible').checked) {
-      outputText = `FAA ADR: ${outputText}`;
-    }
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
+    } else if (document.getElementById('faaAfterDeductible').checked) {
+      outputText = `FAA ADR: ${outputText}`;
     }
 
     const outputDiv = document.getElementById('output');
@@ -693,14 +692,27 @@
     });
 
     const inNetworkCheckbox = document.getElementById('inNetwork');
+    const faaCheckbox = document.getElementById('faaAfterDeductible');
     const copayGroup = document.getElementById('copayGroup');
-    inNetworkCheckbox.addEventListener('change', function () {
-      if (this.checked) {
+
+    function updateCopayVisibility() {
+      if (inNetworkCheckbox.checked) {
         copayGroup.style.display = '';
       } else {
         copayGroup.style.display = 'none';
         document.getElementById('copay').value = '';
       }
+    }
+
+    // FAA after-deductible rates are out of network only, so the two are exclusive
+    inNetworkCheckbox.addEventListener('change', function () {
+      if (this.checked) faaCheckbox.checked = false;
+      updateCopayVisibility();
+    });
+
+    faaCheckbox.addEventListener('change', function () {
+      if (this.checked) inNetworkCheckbox.checked = false;
+      updateCopayVisibility();
     });
 
     const combinedBox = document.getElementById('combined');

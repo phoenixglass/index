@@ -235,6 +235,7 @@
       <label for="inNetwork">In Network:</label>
       <button class="rate-button" data-rate="CTWilton" onclick="applyRates('CTWilton')">CT Wilton Rates</button>
       <button class="rate-button" data-rate="CTCanaan" onclick="applyRates('CTCanaan')">CT Canaan Rates</button>
+      <button class="rate-button" data-rate="CTAnthem" onclick="applyRates('CTAnthem')">CT Anthem BCBS Rates</button>
       <button class="rate-button" data-rate="NY" onclick="applyRates('NY')">NY Rates</button>
       <button class="rate-button" data-rate="NJ" onclick="applyRates('NJ')">NJ Rates</button>
       <button class="rate-button" data-rate="SelfPay" onclick="applyRates('SelfPay')">Self-Pay Rates</button>
@@ -379,7 +380,7 @@
       
       <h4>🚀 Quick Start</h4>
       <ol>
-        <li><strong>Choose your rates:</strong> Click CT Wilton, CT Canaan, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
+        <li><strong>Choose your rates:</strong> Click CT Wilton, CT Canaan, CT Anthem BCBS, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
         <li><strong>Fill in patient info:</strong> Enter deductible/OOP amounts, coinsurance, etc.</li>
         <li><strong>Click "Generate Output"</strong> to create your summary</li>
         <li><strong>Click "Copy Output"</strong> to copy to clipboard and paste into patient records</li>
@@ -387,7 +388,7 @@
 
       <h4>🏥 Service Rates</h4>
       <ul>
-        <li>Click rate buttons (CT Wilton/CT Canaan/NY/NJ/Self-Pay) to auto-fill all service prices</li>
+        <li>Click rate buttons (CT Wilton/CT Canaan/CT Anthem BCBS/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
         <li>Check "FAA" and type your own details in the box that appears (e.g. "ADR") to prefix the output with "FAA ADR:". Leave the box empty for just "FAA:". FAA is out of network, so it cannot be combined with "In Network"</li>
         <li>"Scholarship" works exactly the same way (e.g. "Scholarship 50%:"). Only one of In Network, FAA, or Scholarship can be checked at a time</li>
@@ -456,12 +457,15 @@
   const rateSets = {
     CTWilton: { assessment: 118.19, iop: 298, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     CTCanaan: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    // Anthem BCBS contracted rates (CT only). Specialty Group isn't on the contract;
+    // it mirrors Group like the other in-network sets and only prints for Self-Pay.
+    CTAnthem: { assessment: 194, iop: 450, group: 31, specialtyGroup: 31, it: 171, ft: 114, eval: 219, followup: 147, mat: 50 },
     NY: { assessment: 118.19, iop: 305, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NJ: { assessment: 112.56, iop: 225, group: 40, specialtyGroup: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
     SelfPay: { assessment: 450, iop: 295, group: 175, specialtyGroup: 100, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
   };
 
-  const rateLabels = { CTWilton: 'CT Wilton', CTCanaan: 'CT Canaan', NY: 'NY', NJ: 'NJ', SelfPay: 'Self-Pay' };
+  const rateLabels = { CTWilton: 'CT Wilton', CTCanaan: 'CT Canaan', CTAnthem: 'CT Anthem BCBS', NY: 'NY', NJ: 'NJ', SelfPay: 'Self-Pay' };
 
   // Out-of-network prefix options with a write-in box: checking one shows its box,
   // and the output starts with "<label> <what you typed>:"

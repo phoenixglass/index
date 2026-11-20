@@ -8,7 +8,7 @@ A simple web tool to quickly generate formatted insurance summaries for patient 
 ## 📋 How to Use
 
 ### Quick Start
-1. **Choose your rates**: Click CT Wilton, CT Canaan, NY, NJ, or Self-Pay buttons to auto-fill service rates
+1. **Choose your rates**: Click CT Wilton, CT Canaan, CT Anthem BCBS, NY, NJ, or Self-Pay buttons to auto-fill service rates
 2. **Fill in patient info**: Enter deductible/OOP amounts, coinsurance, etc.
 3. **Click "Generate Output"** to create your summary
 4. **Click "Copy Output"** to copy to clipboard and paste into patient records
@@ -16,7 +16,7 @@ A simple web tool to quickly generate formatted insurance summaries for patient 
 ### Key Features
 
 **🏥 Service Rates**
-- Click rate buttons (CT Wilton/CT Canaan/NY/NJ/Self-Pay) to auto-fill all service prices
+- Click rate buttons (CT Wilton/CT Canaan/CT Anthem BCBS/NY/NJ/Self-Pay) to auto-fill all service prices
 - Check "In Network" if applicable
 
 **💰 Deductible & OOP**

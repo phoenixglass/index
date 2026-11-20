@@ -233,7 +233,8 @@
     <div class="checkbox-inline">
       <input type="checkbox" id="inNetwork" />
       <label for="inNetwork">In Network:</label>
-      <button class="rate-button" data-rate="CT" onclick="applyRates('CT')">CT Rates</button>
+      <button class="rate-button" data-rate="CTWilton" onclick="applyRates('CTWilton')">CT Wilton Rates</button>
+      <button class="rate-button" data-rate="CTCanaan" onclick="applyRates('CTCanaan')">CT Canaan Rates</button>
       <button class="rate-button" data-rate="NY" onclick="applyRates('NY')">NY Rates</button>
       <button class="rate-button" data-rate="NJ" onclick="applyRates('NJ')">NJ Rates</button>
       <button class="rate-button" data-rate="SelfPay" onclick="applyRates('SelfPay')">Self-Pay Rates</button>
@@ -372,7 +373,7 @@
       
       <h4>🚀 Quick Start</h4>
       <ol>
-        <li><strong>Choose your rates:</strong> Click CT, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
+        <li><strong>Choose your rates:</strong> Click CT Wilton, CT Canaan, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
         <li><strong>Fill in patient info:</strong> Enter deductible/OOP amounts, coinsurance, etc.</li>
         <li><strong>Click "Generate Output"</strong> to create your summary</li>
         <li><strong>Click "Copy Output"</strong> to copy to clipboard and paste into patient records</li>
@@ -380,7 +381,7 @@
 
       <h4>🏥 Service Rates</h4>
       <ul>
-        <li>Click rate buttons (CT/NY/NJ/Self-Pay) to auto-fill all service prices</li>
+        <li>Click rate buttons (CT Wilton/CT Canaan/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
         <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:" (out of network, so it cannot be combined with "In Network")</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
@@ -446,11 +447,14 @@
 
 <script>
   const rateSets = {
-    CT: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    CTWilton: { assessment: 118.19, iop: 298, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    CTCanaan: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NY: { assessment: 118.19, iop: 305, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NJ: { assessment: 112.56, iop: 225, group: 40, specialtyGroup: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
     SelfPay: { assessment: 450, iop: 295, group: 175, specialtyGroup: 100, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
   };
+
+  const rateLabels = { CTWilton: 'CT Wilton', CTCanaan: 'CT Canaan', NY: 'NY', NJ: 'NJ', SelfPay: 'Self-Pay' };
 
   const fieldIds = ['assessment', 'iop', 'group', 'specialtyGroup', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
   let rateButtons;
@@ -492,7 +496,7 @@
       document.getElementById(field).value = rates[field].toFixed(2);
     });
     if (rateType === 'SelfPay') document.getElementById('telemedSelfPay').checked = true;
-    showMessage('rateMessage', `✅ ${rateType} Rates Applied!`);
+    showMessage('rateMessage', `✅ ${rateLabels[rateType] || rateType} Rates Applied!`);
   }
 
   function applyPostDeductible() {

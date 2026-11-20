@@ -233,7 +233,9 @@
     <div class="checkbox-inline">
       <input type="checkbox" id="inNetwork" />
       <label for="inNetwork">In Network:</label>
-      <button class="rate-button" data-rate="CT" onclick="applyRates('CT')">CT Rates</button>
+      <button class="rate-button" data-rate="CTWilton" onclick="applyRates('CTWilton')">CT Wilton Rates</button>
+      <button class="rate-button" data-rate="CTCanaan" onclick="applyRates('CTCanaan')">CT Canaan Rates</button>
+      <button class="rate-button" data-rate="CTAnthem" onclick="applyRates('CTAnthem')">CT Anthem BCBS Rates</button>
       <button class="rate-button" data-rate="NY" onclick="applyRates('NY')">NY Rates</button>
       <button class="rate-button" data-rate="NJ" onclick="applyRates('NJ')">NJ Rates</button>
       <button class="rate-button" data-rate="SelfPay" onclick="applyRates('SelfPay')">Self-Pay Rates</button>
@@ -241,7 +243,13 @@
     </div>
     <div class="checkbox-inline">
       <input type="checkbox" id="faaAfterDeductible" />
-      <label for="faaAfterDeductible">FAA After Deductible Rates:</label>
+      <label for="faaAfterDeductible">FAA:</label>
+      <input type="text" id="faaNote" placeholder="e.g., ADR" style="display:none; width: 200px;" aria-label="FAA details" />
+    </div>
+    <div class="checkbox-inline">
+      <input type="checkbox" id="scholarship" />
+      <label for="scholarship">Scholarship:</label>
+      <input type="text" id="scholarshipNote" placeholder="your details" style="display:none; width: 200px;" aria-label="Scholarship details" />
     </div>
     <div id="rateMessage"></div>
   </header>
@@ -372,7 +380,7 @@
       
       <h4>🚀 Quick Start</h4>
       <ol>
-        <li><strong>Choose your rates:</strong> Click CT, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
+        <li><strong>Choose your rates:</strong> Click CT Wilton, CT Canaan, CT Anthem BCBS, NY, NJ, or Self-Pay buttons to auto-fill service rates</li>
         <li><strong>Fill in patient info:</strong> Enter deductible/OOP amounts, coinsurance, etc.</li>
         <li><strong>Click "Generate Output"</strong> to create your summary</li>
         <li><strong>Click "Copy Output"</strong> to copy to clipboard and paste into patient records</li>
@@ -380,9 +388,10 @@
 
       <h4>🏥 Service Rates</h4>
       <ul>
-        <li>Click rate buttons (CT/NY/NJ/Self-Pay) to auto-fill all service prices</li>
+        <li>Click rate buttons (CT Wilton/CT Canaan/CT Anthem BCBS/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
-        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:" (out of network, so it cannot be combined with "In Network")</li>
+        <li>Check "FAA" and type your own details in the box that appears (e.g. "ADR") to prefix the output with "FAA ADR:". Leave the box empty for just "FAA:". FAA is out of network, so it cannot be combined with "In Network"</li>
+        <li>"Scholarship" works exactly the same way (e.g. "Scholarship 50%:"). Only one of In Network, FAA, or Scholarship can be checked at a time</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
@@ -399,7 +408,7 @@
         <li>Enter percentage (e.g., "40") and click "Post-Deductible"</li>
         <li>Automatically calculates patient responsibility after deductible is met</li>
         <li><strong>In-Network:</strong> Exact dollar and cent amount (no rounding)</li>
-        <li><strong>Out-of-Network:</strong> Rounds UP to nearest cent</li>
+        <li><strong>Out-of-Network:</strong> Rounds UP to the next 50 cents (e.g. $97.35 → $97.50, $148.50 stays $148.50)</li>
       </ul>
 
       <h4>🏥 PIF (Paid In Full)</h4>
@@ -446,11 +455,24 @@
 
 <script>
   const rateSets = {
-    CT: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    CTWilton: { assessment: 118.19, iop: 298, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    CTCanaan: { assessment: 118.19, iop: 328, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
+    // Anthem BCBS contracted rates (CT only). Specialty Group isn't on the contract;
+    // it mirrors Group like the other in-network sets and only prints for Self-Pay.
+    CTAnthem: { assessment: 194, iop: 450, group: 31, specialtyGroup: 31, it: 171, ft: 114, eval: 219, followup: 147, mat: 50 },
     NY: { assessment: 118.19, iop: 305, group: 40, specialtyGroup: 40, it: 95.90, ft: 96.36, eval: 176.30, followup: 126.40, mat: 20.50 },
     NJ: { assessment: 112.56, iop: 225, group: 40, specialtyGroup: 40, it: 109.59, ft: 91.77, eval: 167.90, followup: 120.38, mat: 22.97 },
     SelfPay: { assessment: 450, iop: 295, group: 175, specialtyGroup: 100, it: 175, ft: 275, eval: 675, followup: 200, mat: 200 }
   };
+
+  const rateLabels = { CTWilton: 'CT Wilton', CTCanaan: 'CT Canaan', CTAnthem: 'CT Anthem BCBS', NY: 'NY', NJ: 'NJ', SelfPay: 'Self-Pay' };
+
+  // Out-of-network prefix options with a write-in box: checking one shows its box,
+  // and the output starts with "<label> <what you typed>:"
+  const prefixOptions = [
+    { checkboxId: 'faaAfterDeductible', noteId: 'faaNote', label: 'FAA' },
+    { checkboxId: 'scholarship', noteId: 'scholarshipNote', label: 'Scholarship' }
+  ];
 
   const fieldIds = ['assessment', 'iop', 'group', 'specialtyGroup', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
   let rateButtons;
@@ -469,7 +491,11 @@
   function resetRates() {
     fieldIds.forEach(id => document.getElementById(id).value = '');
     document.getElementById('inNetwork').checked = false;
-    document.getElementById('faaAfterDeductible').checked = false;
+    prefixOptions.forEach(({ checkboxId, noteId }) => {
+      document.getElementById(checkboxId).checked = false;
+      document.getElementById(noteId).value = '';
+      document.getElementById(noteId).style.display = 'none';
+    });
     document.getElementById('copay').value = '';
     document.getElementById('copayGroup').style.display = 'none';
     document.getElementsByName('telemed').forEach(el => el.checked = false);
@@ -492,7 +518,7 @@
       document.getElementById(field).value = rates[field].toFixed(2);
     });
     if (rateType === 'SelfPay') document.getElementById('telemedSelfPay').checked = true;
-    showMessage('rateMessage', `✅ ${rateType} Rates Applied!`);
+    showMessage('rateMessage', `✅ ${rateLabels[rateType] || rateType} Rates Applied!`);
   }
 
   function applyPostDeductible() {
@@ -511,7 +537,9 @@
           if (document.getElementById('inNetwork').checked) {
             result = Math.round(result * 100) / 100;
           } else {
-            result = Math.ceil(result);
+            // Round UP to the next 50 cents. Round to the cent first so floating-point
+            // noise (295 * 0.33 = 97.35000000000001) can't bump an exact amount up.
+            result = Math.ceil(Math.round(result * 100) / 50) / 2;
           }
           input.value = result.toFixed(2);
         }
@@ -534,11 +562,15 @@
     }
   }
 
-  function formatCurrency(value) {
+  // Service rates and copay always show cents ($95.90). Deductible/OOP amounts
+  // pass centsOnlyIfNeeded so whole dollars stay clean ($2,000) and only
+  // amounts with change get cents ($1,234.50).
+  function formatCurrency(value, centsOnlyIfNeeded = false) {
     if (!value) return '';
     const num = parseFloat(value.toString().replace(/[,$]/g, ''));
     if (isNaN(num)) return value;
-    return '$' + num.toLocaleString();
+    const minDigits = centsOnlyIfNeeded && Number.isInteger(num) ? 0 : 2;
+    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 2 });
   }
 
   function generateOutput() {
@@ -596,17 +628,17 @@
       
       // Always show deductible if present
       if (deductibleUsed && deductibleTotal) {
-        parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
+        parts.push(`${formatCurrency(deductibleUsed, true)}/${formatCurrency(deductibleTotal, true)} deductible`);
       }
       
       // Always show OOP if present
       if (oopUsed && oopTotal) {
         if (combined) {
           // For combined: show OOP total only
-          parts.push(`${formatCurrency(oopTotal)} OOP (combine)`);
+          parts.push(`${formatCurrency(oopTotal, true)} OOP (combine)`);
         } else {
           // For separate: show used/total OOP
-          parts.push(`${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} OOP`);
+          parts.push(`${formatCurrency(oopUsed, true)}/${formatCurrency(oopTotal, true)} OOP`);
           if (separate) {
             // Add (separate) label if separate is checked
             parts[parts.length - 1] = parts[parts.length - 1].replace(' OOP', ' OOP (separate)');
@@ -634,9 +666,12 @@
     }
 
     let outputText = outputParts.filter(Boolean).join(' | ');
-    if (document.getElementById('faaAfterDeductible').checked) {
-      outputText = `FAA ADR: ${outputText}`;
-    }
+    prefixOptions.forEach(({ checkboxId, noteId, label }) => {
+      if (document.getElementById(checkboxId).checked) {
+        const note = document.getElementById(noteId).value.trim();
+        outputText = `${note ? `${label} ${note}` : label}: ${outputText}`;
+      }
+    });
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
     }
@@ -693,11 +728,18 @@
     });
 
     const inNetworkCheckbox = document.getElementById('inNetwork');
-    const faaCheckbox = document.getElementById('faaAfterDeductible');
     const copayGroup = document.getElementById('copayGroup');
+
+    function uncheckPrefixOption({ checkboxId, noteId }) {
+      document.getElementById(checkboxId).checked = false;
+      const note = document.getElementById(noteId);
+      note.style.display = 'none';
+      note.value = '';
+    }
+
     inNetworkCheckbox.addEventListener('change', function () {
       if (this.checked) {
-        faaCheckbox.checked = false;
+        prefixOptions.forEach(uncheckPrefixOption);
         copayGroup.style.display = '';
       } else {
         copayGroup.style.display = 'none';
@@ -705,14 +747,23 @@
       }
     });
 
-    // FAA rates are out of network, so the two can never both be checked
-    // and out of network has no copay
-    faaCheckbox.addEventListener('change', function () {
-      if (this.checked) {
-        inNetworkCheckbox.checked = false;
-        copayGroup.style.display = 'none';
-        document.getElementById('copay').value = '';
-      }
+    // FAA and Scholarship are out of network: only one of In Network / FAA /
+    // Scholarship can be checked at a time, and out of network has no copay
+    prefixOptions.forEach(option => {
+      const checkbox = document.getElementById(option.checkboxId);
+      const note = document.getElementById(option.noteId);
+      checkbox.addEventListener('change', function () {
+        if (this.checked) {
+          inNetworkCheckbox.checked = false;
+          copayGroup.style.display = 'none';
+          document.getElementById('copay').value = '';
+          prefixOptions.filter(other => other !== option).forEach(uncheckPrefixOption);
+          note.style.display = '';
+          note.focus();
+        } else {
+          uncheckPrefixOption(option);
+        }
+      });
     });
 
     const combinedBox = document.getElementById('combined');

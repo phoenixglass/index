@@ -245,6 +245,11 @@
       <label for="faaAfterDeductible">FAA:</label>
       <input type="text" id="faaNote" placeholder="e.g., ADR" style="display:none; width: 200px;" aria-label="FAA details" />
     </div>
+    <div class="checkbox-inline">
+      <input type="checkbox" id="scholarship" />
+      <label for="scholarship">Scholarship:</label>
+      <input type="text" id="scholarshipNote" placeholder="your details" style="display:none; width: 200px;" aria-label="Scholarship details" />
+    </div>
     <div id="rateMessage"></div>
   </header>
 
@@ -385,6 +390,7 @@
         <li>Click rate buttons (CT Wilton/CT Canaan/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
         <li>Check "FAA" and type your own details in the box that appears (e.g. "ADR") to prefix the output with "FAA ADR:". Leave the box empty for just "FAA:". FAA is out of network, so it cannot be combined with "In Network"</li>
+        <li>"Scholarship" works exactly the same way (e.g. "Scholarship 50%:"). Only one of In Network, FAA, or Scholarship can be checked at a time</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
@@ -457,6 +463,13 @@
 
   const rateLabels = { CTWilton: 'CT Wilton', CTCanaan: 'CT Canaan', NY: 'NY', NJ: 'NJ', SelfPay: 'Self-Pay' };
 
+  // Out-of-network prefix options with a write-in box: checking one shows its box,
+  // and the output starts with "<label> <what you typed>:"
+  const prefixOptions = [
+    { checkboxId: 'faaAfterDeductible', noteId: 'faaNote', label: 'FAA' },
+    { checkboxId: 'scholarship', noteId: 'scholarshipNote', label: 'Scholarship' }
+  ];
+
   const fieldIds = ['assessment', 'iop', 'group', 'specialtyGroup', 'it', 'ft', 'eval', 'followup', 'mat', 'deductibleUsed', 'deductibleTotal', 'oopUsed', 'oopTotal', 'asOf', 'coinsurance', 'renews'];
   let rateButtons;
   let isPIFActive = false;
@@ -474,9 +487,11 @@
   function resetRates() {
     fieldIds.forEach(id => document.getElementById(id).value = '');
     document.getElementById('inNetwork').checked = false;
-    document.getElementById('faaAfterDeductible').checked = false;
-    document.getElementById('faaNote').value = '';
-    document.getElementById('faaNote').style.display = 'none';
+    prefixOptions.forEach(({ checkboxId, noteId }) => {
+      document.getElementById(checkboxId).checked = false;
+      document.getElementById(noteId).value = '';
+      document.getElementById(noteId).style.display = 'none';
+    });
     document.getElementById('copay').value = '';
     document.getElementById('copayGroup').style.display = 'none';
     document.getElementsByName('telemed').forEach(el => el.checked = false);
@@ -641,10 +656,12 @@
     }
 
     let outputText = outputParts.filter(Boolean).join(' | ');
-    if (document.getElementById('faaAfterDeductible').checked) {
-      const faaNote = document.getElementById('faaNote').value.trim();
-      outputText = `${faaNote ? `FAA ${faaNote}` : 'FAA'}: ${outputText}`;
-    }
+    prefixOptions.forEach(({ checkboxId, noteId, label }) => {
+      if (document.getElementById(checkboxId).checked) {
+        const note = document.getElementById(noteId).value.trim();
+        outputText = `${note ? `${label} ${note}` : label}: ${outputText}`;
+      }
+    });
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
     }
@@ -701,17 +718,18 @@
     });
 
     const inNetworkCheckbox = document.getElementById('inNetwork');
-    const faaCheckbox = document.getElementById('faaAfterDeductible');
     const copayGroup = document.getElementById('copayGroup');
-    const faaNote = document.getElementById('faaNote');
-    function hideFaaNote() {
-      faaNote.style.display = 'none';
-      faaNote.value = '';
+
+    function uncheckPrefixOption({ checkboxId, noteId }) {
+      document.getElementById(checkboxId).checked = false;
+      const note = document.getElementById(noteId);
+      note.style.display = 'none';
+      note.value = '';
     }
+
     inNetworkCheckbox.addEventListener('change', function () {
       if (this.checked) {
-        faaCheckbox.checked = false;
-        hideFaaNote();
+        prefixOptions.forEach(uncheckPrefixOption);
         copayGroup.style.display = '';
       } else {
         copayGroup.style.display = 'none';
@@ -719,18 +737,23 @@
       }
     });
 
-    // FAA rates are out of network, so the two can never both be checked
-    // and out of network has no copay
-    faaCheckbox.addEventListener('change', function () {
-      if (this.checked) {
-        inNetworkCheckbox.checked = false;
-        copayGroup.style.display = 'none';
-        document.getElementById('copay').value = '';
-        faaNote.style.display = '';
-        faaNote.focus();
-      } else {
-        hideFaaNote();
-      }
+    // FAA and Scholarship are out of network: only one of In Network / FAA /
+    // Scholarship can be checked at a time, and out of network has no copay
+    prefixOptions.forEach(option => {
+      const checkbox = document.getElementById(option.checkboxId);
+      const note = document.getElementById(option.noteId);
+      checkbox.addEventListener('change', function () {
+        if (this.checked) {
+          inNetworkCheckbox.checked = false;
+          copayGroup.style.display = 'none';
+          document.getElementById('copay').value = '';
+          prefixOptions.filter(other => other !== option).forEach(uncheckPrefixOption);
+          note.style.display = '';
+          note.focus();
+        } else {
+          uncheckPrefixOption(option);
+        }
+      });
     });
 
     const combinedBox = document.getElementById('combined');

@@ -556,11 +556,15 @@
     }
   }
 
-  function formatCurrency(value) {
+  // Service rates and copay always show cents ($95.90). Deductible/OOP amounts
+  // pass centsOnlyIfNeeded so whole dollars stay clean ($2,000) and only
+  // amounts with change get cents ($1,234.50).
+  function formatCurrency(value, centsOnlyIfNeeded = false) {
     if (!value) return '';
     const num = parseFloat(value.toString().replace(/[,$]/g, ''));
     if (isNaN(num)) return value;
-    return '$' + num.toLocaleString();
+    const minDigits = centsOnlyIfNeeded && Number.isInteger(num) ? 0 : 2;
+    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 2 });
   }
 
   function generateOutput() {
@@ -618,17 +622,17 @@
       
       // Always show deductible if present
       if (deductibleUsed && deductibleTotal) {
-        parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
+        parts.push(`${formatCurrency(deductibleUsed, true)}/${formatCurrency(deductibleTotal, true)} deductible`);
       }
       
       // Always show OOP if present
       if (oopUsed && oopTotal) {
         if (combined) {
           // For combined: show OOP total only
-          parts.push(`${formatCurrency(oopTotal)} OOP (combine)`);
+          parts.push(`${formatCurrency(oopTotal, true)} OOP (combine)`);
         } else {
           // For separate: show used/total OOP
-          parts.push(`${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} OOP`);
+          parts.push(`${formatCurrency(oopUsed, true)}/${formatCurrency(oopTotal, true)} OOP`);
           if (separate) {
             // Add (separate) label if separate is checked
             parts[parts.length - 1] = parts[parts.length - 1].replace(' OOP', ' OOP (separate)');

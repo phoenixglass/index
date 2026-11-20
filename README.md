@@ -27,7 +27,7 @@ A simple web tool to quickly generate formatted insurance summaries for patient 
 **📊 Post-Deductible Calculator**
 - Enter percentage (e.g., "40") and click "Post-Deductible"
 - Automatically calculates patient responsibility
-- Rounds up for out-of-network rates
+- Rounds up to the next 50 cents for out-of-network rates
 
 **🏥 PIF (Paid In Full)**
 - Click "PIF" button and select year

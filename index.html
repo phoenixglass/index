@@ -407,7 +407,7 @@
         <li>Enter percentage (e.g., "40") and click "Post-Deductible"</li>
         <li>Automatically calculates patient responsibility after deductible is met</li>
         <li><strong>In-Network:</strong> Exact dollar and cent amount (no rounding)</li>
-        <li><strong>Out-of-Network:</strong> Rounds UP to nearest cent</li>
+        <li><strong>Out-of-Network:</strong> Rounds UP to the next 50 cents (e.g. $97.35 → $97.50, $148.50 stays $148.50)</li>
       </ul>
 
       <h4>🏥 PIF (Paid In Full)</h4>
@@ -533,7 +533,9 @@
           if (document.getElementById('inNetwork').checked) {
             result = Math.round(result * 100) / 100;
           } else {
-            result = Math.ceil(result);
+            // Round UP to the next 50 cents. Round to the cent first so floating-point
+            // noise (295 * 0.33 = 97.35000000000001) can't bump an exact amount up.
+            result = Math.ceil(Math.round(result * 100) / 50) / 2;
           }
           input.value = result.toFixed(2);
         }

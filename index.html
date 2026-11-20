@@ -242,7 +242,8 @@
     </div>
     <div class="checkbox-inline">
       <input type="checkbox" id="faaAfterDeductible" />
-      <label for="faaAfterDeductible">FAA After Deductible Rates:</label>
+      <label for="faaAfterDeductible">FAA:</label>
+      <input type="text" id="faaNote" placeholder="e.g., ADR" style="display:none; width: 200px;" aria-label="FAA details" />
     </div>
     <div id="rateMessage"></div>
   </header>
@@ -383,7 +384,7 @@
       <ul>
         <li>Click rate buttons (CT Wilton/CT Canaan/NY/NJ/Self-Pay) to auto-fill all service prices</li>
         <li>Check "In Network" if applicable</li>
-        <li>Check "FAA After Deductible Rates" to prefix the output with "FAA ADR:" (out of network, so it cannot be combined with "In Network")</li>
+        <li>Check "FAA" and type your own details in the box that appears (e.g. "ADR") to prefix the output with "FAA ADR:". Leave the box empty for just "FAA:". FAA is out of network, so it cannot be combined with "In Network"</li>
         <li>Individual services: Assessment, IOP, Group, Specialty Group, IT, FT, Psych Eval, Psych f/u, MAT</li>
       </ul>
 
@@ -474,6 +475,8 @@
     fieldIds.forEach(id => document.getElementById(id).value = '');
     document.getElementById('inNetwork').checked = false;
     document.getElementById('faaAfterDeductible').checked = false;
+    document.getElementById('faaNote').value = '';
+    document.getElementById('faaNote').style.display = 'none';
     document.getElementById('copay').value = '';
     document.getElementById('copayGroup').style.display = 'none';
     document.getElementsByName('telemed').forEach(el => el.checked = false);
@@ -639,7 +642,8 @@
 
     let outputText = outputParts.filter(Boolean).join(' | ');
     if (document.getElementById('faaAfterDeductible').checked) {
-      outputText = `FAA ADR: ${outputText}`;
+      const faaNote = document.getElementById('faaNote').value.trim();
+      outputText = `${faaNote ? `FAA ${faaNote}` : 'FAA'}: ${outputText}`;
     }
     if (document.getElementById('inNetwork').checked) {
       outputText = `In Network: ${outputText}`;
@@ -699,9 +703,15 @@
     const inNetworkCheckbox = document.getElementById('inNetwork');
     const faaCheckbox = document.getElementById('faaAfterDeductible');
     const copayGroup = document.getElementById('copayGroup');
+    const faaNote = document.getElementById('faaNote');
+    function hideFaaNote() {
+      faaNote.style.display = 'none';
+      faaNote.value = '';
+    }
     inNetworkCheckbox.addEventListener('change', function () {
       if (this.checked) {
         faaCheckbox.checked = false;
+        hideFaaNote();
         copayGroup.style.display = '';
       } else {
         copayGroup.style.display = 'none';
@@ -716,6 +726,10 @@
         inNetworkCheckbox.checked = false;
         copayGroup.style.display = 'none';
         document.getElementById('copay').value = '';
+        faaNote.style.display = '';
+        faaNote.focus();
+      } else {
+        hideFaaNote();
       }
     });
 

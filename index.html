@@ -408,7 +408,7 @@
         <li>Enter percentage (e.g., "40") and click "Post-Deductible"</li>
         <li>Automatically calculates patient responsibility after deductible is met</li>
         <li><strong>In-Network:</strong> Exact dollar and cent amount (no rounding)</li>
-        <li><strong>Out-of-Network:</strong> Rounds UP to the next 50 cents (e.g. $97.35 → $97.50, $148.50 stays $148.50)</li>
+        <li><strong>Out-of-Network:</strong> Rounds UP to the next 50 cents (e.g. $97.35 → $97.50, $148.50 stays $148.50, $98 stays $98)</li>
       </ul>
 
       <h4>🏥 PIF (Paid In Full)</h4>
@@ -428,7 +428,7 @@
 
       <h4>📝 Sample Outputs</h4>
       <p><strong>Standard Output:</strong><br>
-      <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: Assessment $118.19 | IOP $328.00 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes</code></p>
+      <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: Assessment $118.19 | IOP $328 | $2,000/$6,000 deductible used as of 4/10 | 40% coinsurance | Ins Renews 1/2026 | Telemed: Yes</code></p>
       
       <p><strong>PIF Output:</strong><br>
       <code style="background: #f5f5f5; padding: 5px; border-radius: 3px; display: block; margin: 5px 0; font-size: 12px;">In Network: 2025 PIF | Ins Renews 1/2026 | Telemed: Yes</code></p>
@@ -515,7 +515,7 @@
     if (!rates) return;
     currentRateType = rateType;
     Object.keys(rates).forEach(field => {
-      document.getElementById(field).value = rates[field].toFixed(2);
+      document.getElementById(field).value = formatAmount(rates[field]);
     });
     if (rateType === 'SelfPay') document.getElementById('telemedSelfPay').checked = true;
     showMessage('rateMessage', `✅ ${rateLabels[rateType] || rateType} Rates Applied!`);
@@ -541,7 +541,7 @@
             // noise (295 * 0.33 = 97.35000000000001) can't bump an exact amount up.
             result = Math.ceil(Math.round(result * 100) / 50) / 2;
           }
-          input.value = result.toFixed(2);
+          input.value = formatAmount(result);
         }
       }
     });
@@ -562,15 +562,20 @@
     }
   }
 
-  // Service rates and copay always show cents ($95.90). Deductible/OOP amounts
-  // pass centsOnlyIfNeeded so whole dollars stay clean ($2,000) and only
-  // amounts with change get cents ($1,234.50).
-  function formatCurrency(value, centsOnlyIfNeeded = false) {
+  // Cents only when there's change: $50, $50.50, $1,234.05 (never $50.00 or $50.5).
+  function formatCurrency(value) {
     if (!value) return '';
     const num = parseFloat(value.toString().replace(/[,$]/g, ''));
     if (isNaN(num)) return value;
-    const minDigits = centsOnlyIfNeeded && Number.isInteger(num) ? 0 : 2;
-    return '$' + num.toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 2 });
+    const cents = Math.round(num * 100);
+    const minDigits = cents % 100 === 0 ? 0 : 2;
+    return '$' + (cents / 100).toLocaleString('en-US', { minimumFractionDigits: minDigits, maximumFractionDigits: 2 });
+  }
+
+  // Same rule for numbers written into input boxes: 298, 95.90, 97.50.
+  function formatAmount(num) {
+    const cents = Math.round(num * 100);
+    return cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
   }
 
   function generateOutput() {
@@ -628,17 +633,17 @@
       
       // Always show deductible if present
       if (deductibleUsed && deductibleTotal) {
-        parts.push(`${formatCurrency(deductibleUsed, true)}/${formatCurrency(deductibleTotal, true)} deductible`);
+        parts.push(`${formatCurrency(deductibleUsed)}/${formatCurrency(deductibleTotal)} deductible`);
       }
       
       // Always show OOP if present
       if (oopUsed && oopTotal) {
         if (combined) {
           // For combined: show OOP total only
-          parts.push(`${formatCurrency(oopTotal, true)} OOP (combine)`);
+          parts.push(`${formatCurrency(oopTotal)} OOP (combine)`);
         } else {
           // For separate: show used/total OOP
-          parts.push(`${formatCurrency(oopUsed, true)}/${formatCurrency(oopTotal, true)} OOP`);
+          parts.push(`${formatCurrency(oopUsed)}/${formatCurrency(oopTotal)} OOP`);
           if (separate) {
             // Add (separate) label if separate is checked
             parts[parts.length - 1] = parts[parts.length - 1].replace(' OOP', ' OOP (separate)');
